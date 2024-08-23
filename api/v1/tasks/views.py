@@ -2,7 +2,7 @@ from rest_framework.response import Response
 from rest_framework.decorators import api_view
 
 from tasks.models import Task
-from api.v1.tasks.serializers import TaskSerializer
+from api.v1.tasks.serializers import TaskSerializer, TaskDeleteSerializer
 
 
 @api_view(["GET"])
@@ -38,15 +38,45 @@ def create_task(request):
 @api_view(["POST"])
 def update_task(request,pk):
     if Task.objects.filter(pk=pk).exists():
-        instance = Task.objects.get(pk=pk)
+        task = Task.objects.get(pk=pk)
 
-        serializer = TaskSerializer(instance=instance, data=request.data, partial=True)
+        serializer = TaskSerializer(instance=task, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
 
             response_data = {
                 "status_code" : 6000,
                 "message" : "Success"
+            }
+
+            return Response(response_data)
+        
+        else:
+            response_data = {
+                "status_code" : 6001,
+                "message" : "Valiation Error",
+                "data" : serializer.errors
+            }
+            return Response(response_data)
+    else:
+        response_data = {
+            "status_code" : 6001,
+            "message" : "Not Found",
+        }
+        return Response(response_data)
+    
+@api_view(["POST"])
+def delete_task(request,pk):
+    if Task.objects.filter(pk=pk).exists():
+        task = Task.objects.get(pk=pk)
+
+        serializer = TaskDeleteSerializer(instance=task, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+
+            response_data = {
+                "status_code" : 6000,
+                "message" : "Successfully Deleted"
             }
 
             return Response(response_data)
